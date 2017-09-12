@@ -814,6 +814,43 @@
                             }
                         }
                     );
+
+                    function floatingLine() {
+                        var $menu = $('.js-float-line');
+                        $menu.each(function () {
+                            var $currentMenu = $(this),
+                            $menuItem = $('.js-float-line .nav-item');
+                            $menuItem.mouseenter(function () {
+                                var $listItem = $(this),
+                                    $link = $listItem.find('.nav-link');
+                                if($currentMenu.find('.main-menu-animated-line').length){
+                                    terminateCssValue($link)
+                                }else{
+                                    $currentMenu.append('<li class="main-menu-animated-line bottom"></li>');
+                                    terminateCssValue()
+                                }
+                                function terminateCssValue() {
+                                    var leftMargin = $link.css("margin-left"),
+                                        widthItem = $link.width(),
+                                        offset = $listItem.position()['left']+parseInt(leftMargin);
+                                    moveLine(widthItem, offset);
+                                }
+                            });
+                            $menu.on('mouseleave', function () {
+                                $('.main-menu-animated-line').remove();
+                            });
+                            function moveLine(widthItem, offset) {
+                                var $thisLine = $menu.find('.main-menu-animated-line');
+                                $thisLine.css("width", widthItem);
+                                $thisLine.css("left", offset);
+                            }
+
+                        })
+                    }
+                    if (typeof floatingLine !== "undefined"){
+                        floatingLine()
+                    }
+
                 }
             }    
         }
@@ -821,6 +858,9 @@
 
     // Script for circle progress
     function initCircleProgress(card) {
+        $ID = $(card).attr('id')+'-svg-gradient';
+        // console.log($ID);
+
         $('.pie_progress').asPieProgress({
             namespace: 'asPieProgress',
             classes: {
@@ -838,6 +878,12 @@
 
         $(card).find('.pie_progress').each(function() {
             $(this).asPieProgress('go', $(this).attr('data-goal') + '%');
+        });
+
+        $(card).find('svg linearGradient').attr('id',$ID);
+
+        $(card).find('.pie_progress svg path').each(function(){
+            $(this).attr('stroke','url(#'+$ID+')');
         });
     }
 
@@ -858,11 +904,14 @@
                 if ($('.pie_progress').length) {
                     setCurrentCircleProgress(event.target, paramName);
                 }
+                initCircleProgress(event.target);
             }
         });
     } else {
-        if ($('.pie_progress').length) {
-            initCircleProgress(document.body);
+        if ($('.circle-progress-section').length!=0) {
+            $('.circle-progress-section').each(function(){
+                initCircleProgress($(this));
+            });
         }
     }
 
@@ -1215,7 +1264,7 @@
             }
         });
     }
-
+    
     function getDisplayClass(arr){
         var display="";
         $.each(arr, function(index, el) {   
@@ -1225,7 +1274,7 @@
         });
         return display;
     }
-    
+
     if (isBuilder){
         $(document).on('add.cards',function(event) {
             if($(event.target).hasClass('section-table')){
@@ -1276,4 +1325,5 @@
             });
         }
     }
+
 })(jQuery);
