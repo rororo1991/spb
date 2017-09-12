@@ -6,7 +6,7 @@
         var e = document.createElement("section");
         e.id = "top-1";
         e.className = "engine";
-        e.innerHTML = '<a href="https://mobirise.info">Mobirise</a> Mobirise v4.2.0';
+        e.innerHTML = '<a href="https://mobirise.info">Mobirise</a> Mobirise v4.3.0';
         document.body.insertBefore(e, document.body.childNodes[0]);
     }
 }();
@@ -814,43 +814,6 @@
                             }
                         }
                     );
-
-                    function floatingLine() {
-                        var $menu = $('.js-float-line');
-                        $menu.each(function () {
-                            var $currentMenu = $(this),
-                            $menuItem = $('.js-float-line .nav-item');
-                            $menuItem.mouseenter(function () {
-                                var $listItem = $(this),
-                                    $link = $listItem.find('.nav-link');
-                                if($currentMenu.find('.main-menu-animated-line').length){
-                                    terminateCssValue($link)
-                                }else{
-                                    $currentMenu.append('<li class="main-menu-animated-line bottom"></li>');
-                                    terminateCssValue()
-                                }
-                                function terminateCssValue() {
-                                    var leftMargin = $link.css("margin-left"),
-                                        widthItem = $link.width(),
-                                        offset = $listItem.position()['left']+parseInt(leftMargin);
-                                    moveLine(widthItem, offset);
-                                }
-                            });
-                            $menu.on('mouseleave', function () {
-                                $('.main-menu-animated-line').remove();
-                            });
-                            function moveLine(widthItem, offset) {
-                                var $thisLine = $menu.find('.main-menu-animated-line');
-                                $thisLine.css("width", widthItem);
-                                $thisLine.css("left", offset);
-                            }
-
-                        })
-                    }
-                    if (typeof floatingLine !== "undefined"){
-                        floatingLine()
-                    }
-
                 }
             }    
         }
@@ -858,9 +821,6 @@
 
     // Script for circle progress
     function initCircleProgress(card) {
-        $ID = $(card).attr('id')+'-svg-gradient';
-        // console.log($ID);
-
         $('.pie_progress').asPieProgress({
             namespace: 'asPieProgress',
             classes: {
@@ -878,12 +838,6 @@
 
         $(card).find('.pie_progress').each(function() {
             $(this).asPieProgress('go', $(this).attr('data-goal') + '%');
-        });
-
-        $(card).find('svg linearGradient').attr('id',$ID);
-
-        $(card).find('.pie_progress svg path').each(function(){
-            $(this).attr('stroke','url(#'+$ID+')');
         });
     }
 
@@ -904,14 +858,11 @@
                 if ($('.pie_progress').length) {
                     setCurrentCircleProgress(event.target, paramName);
                 }
-                initCircleProgress(event.target);
             }
         });
     } else {
-        if ($('.circle-progress-section').length!=0) {
-            $('.circle-progress-section').each(function(){
-                initCircleProgress($(this));
-            });
+        if ($('.pie_progress').length) {
+            initCircleProgress(document.body);
         }
     }
 
@@ -1244,10 +1195,10 @@
 // Table Block;
     function getRowCount(card){
         var $tbodyRows = $(card).find('.table tbody tr').length;
-        $(card).find('.dataTables_info').text('Showing '+$tbodyRows+' entries');
+        $(card).find('.dataTables_info span.infoRows').text($tbodyRows);
     }
 
-    function initTable(card,isSearch){
+    function initTable(card,isSearch, searchText, infoBefore, infoAfter, infoFilteredBefore, infoFilteredAfter){
         var $target = $(card);
             $target.find('table').dataTable({
             retrieve:true,
@@ -1257,12 +1208,22 @@
             searching:isSearch,
             info: isSearch,
             language: {
-                "search": "Search:",
-                "info": "Showing" + ' _END_ ' + "entries",
-                "infoEmpty": "Showing" + ' _END_ ' + "entries",
-                "infoFiltered": "(filtered from" + ' _MAX_ ' + "total entries)",
+                "search": searchText,
+                "info": infoBefore + ' _END_ ' + infoAfter,
+                "infoEmpty": infoBefore + ' _END_ ' + infoAfter,
+                "infoFiltered": infoFilteredBefore + ' _MAX_ ' + infoFilteredAfter,
             }
         });
+    }
+
+    function getDisplayClass(arr){
+        var display="";
+        $.each(arr, function(index, el) {   
+            if (el.indexOf('display') == 0) {
+                display = el;
+            }
+        });
+        return display;
     }
     
     if (isBuilder){
@@ -1280,10 +1241,29 @@
         if($(document).find('section.section-table').length!=0){
             $('section.section-table').each(function() {
                 var isSearch = $(this).find('table').is('.isSearch');
-                $(this).find('.row.search').remove();
-                $(this).find('.table-wrapper .scroll').removeClass('scroll');
-                $(this).find('.row.info').remove();
-                initTable($(this),isSearch);
+                if (isSearch){
+                    var infoBefore = $(this).find('.dataTables_info span.infoBefore').text(),
+                        infoAfter = $(this).find('.dataTables_info span.infoAfter').text(),
+                        infoFilteredBefore = $(this).find('.dataTables_info span.infoFilteredBefore').text(),
+                        infoFilteredAfter = $(this).find('.dataTables_info span.infoFilteredAfter').text();
+                        searchText = $(this).find('.dataTables_filter label.searchInfo').text(),
+                        infoClasses = $(this).find('.dataTables_info').attr('class').split(/\s/),
+                        searchClasses = $(this).find('.dataTables_filter label.searchInfo').attr('class').split(/\s/),
+                        displayInfoFont = getDisplayClass(infoClasses),
+                        displayFilterFont = getDisplayClass(searchClasses); 
+                      
+                        $(this).find('.row.search').remove();
+                        $(this).find('.table-wrapper .scroll').removeClass('scroll');
+                        $(this).find('.row.info').remove();
+                        initTable($(this),isSearch, searchText, infoBefore, infoAfter, infoFilteredBefore, infoFilteredAfter);
+                        $(this).find('.dataTables_info').addClass(displayInfoFont);
+                        $(this).find('.dataTables_filter label').addClass(displayFilterFont);
+                }else{
+                    $(this).find('.row.search').remove();
+                    $(this).find('.table-wrapper .scroll').removeClass('scroll');
+                    $(this).find('.row.info').remove();
+                    initTable($(this),isSearch);
+                }
             });
         }
     }
@@ -1296,5 +1276,4 @@
             });
         }
     }
-
 })(jQuery);
